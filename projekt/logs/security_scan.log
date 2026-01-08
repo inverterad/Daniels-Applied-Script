@@ -343,3 +343,40 @@ tcp   LISTEN 0      128             [::]:22           [::]:*    users:(("sshd",p
 /usr/bin/kismet_cap_nrf_51822
 /usr/bin/chsh
 2026-01-08 09:25:39,372 - INFO - Script avslutades korrekt
+2026-01-08 12:45:50,200 - INFO - Script startat
+2026-01-08 12:45:50,206 - INFO - Kör kommando: hostname | return code: 0
+2026-01-08 12:45:50,206 - INFO - Output:
+kali
+2026-01-08 12:45:50,212 - INFO - Kör kommando: uname -r | return code: 0
+2026-01-08 12:45:50,212 - INFO - Output:
+6.17.10+kali-amd64
+2026-01-08 12:45:50,216 - INFO - Kör kommando: uptime | return code: 0
+2026-01-08 12:45:50,216 - INFO - Output:
+12:45:50 up  1:44,  1 user,  load average: 1,17, 0,72, 0,43
+2026-01-08 12:45:50,221 - INFO - Kör kommando: ip a | return code: 0
+2026-01-08 12:45:50,221 - INFO - Output:
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:62:b0:2d brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic noprefixroute eth0
+       valid_lft 80159sec preferred_lft 80159sec
+    inet6 fd17:625c:f037:2:a41e:784a:2968:5c7e/64 scope global temporary dynamic 
+       valid_lft 86288sec preferred_lft 14288sec
+    inet6 fd17:625c:f037:2:a00:27ff:fe62:b02d/64 scope global dynamic mngtmpaddr noprefixroute 
+       valid_lft 86288sec preferred_lft 14288sec
+    inet6 fe80::a00:27ff:fe62:b02d/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+2026-01-08 12:45:50,227 - INFO - Kör kommando: ip r | return code: 0
+2026-01-08 12:45:50,227 - INFO - Output:
+default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100 
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100
+2026-01-08 12:45:50,316 - INFO - Kör kommando: ss -tulpen | return code: 0
+2026-01-08 12:45:50,316 - INFO - Output:
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                         
+tcp   LISTEN 0      511        127.0.0.1:3050      0.0.0.0:*    users:(("code",pid=9448,fd=40)) uid:1000 ino:30385 sk:1 cgroup:/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-5955.scope <->
+2026-01-08 12:45:50,316 - INFO - Script avslutades korrekt
