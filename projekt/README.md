@@ -152,19 +152,27 @@ Scriptet hanterar fel på följande sätt:
 - **Kommandofel:** Loggas med returkod och felmeddelande
 - **Oväntat fel:** Loggas med detaljer om vad som gick fel
 
+## Säkerhet & ansvar
 
----
-
-## Säkerhetsöverväganden
-
- **Viktigt att veta:**
+**Viktigt att känna till:**
 
 - Scriptet kräver root-behörighet för att kunna läsa all nödvändig systeminformation
-- Scriptet gör INGA ändringar i systemet - det är enbart läsande
-- Loggfilen kan innehålla känslig information (IP-adresser, öppna portar)
-- Dela inte loggfiler offentligt utan att först granska innehållet
+- Scriptet gör inga förändringar i systemet utan är enbart läsande
+- Loggfilen kan innehålla känslig information såsom IP-adresser och öppna portar
+- Loggfiler bör granskas innan de delas vidare eller lagras i publika miljöer
+
+- Loggar ska hanteras enligt principen om minsta möjliga exponering
 
 ---
+
+## Screenshot
+
+Nedan visas en körning av scriptet i terminal:
+
+<p align="center">
+  <img src="docs/images/screenshot_script.png" width="800">
+</p>
+
 
 ## Författare
 
@@ -184,4 +192,4 @@ Detta projekt är skapat för utbildningsändamål i kursen Applied Script.
 
 ## Version
 
-**Version 1.5** (2025-01-09)
+**Version 1.** (2025-01-09)
