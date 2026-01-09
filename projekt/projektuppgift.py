@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 SCRIPT_NAME = "Security Scan Script"
-VERSION = "1.5"
+VERSION = "1.6"
 LOG_DIR = Path("logs")
 LOG_FILE = LOG_DIR / "security_scan.log"
 
@@ -40,7 +40,7 @@ def run_command(command, max_lines=30):
     if output:
         lines = output.splitlines()
         
-        # Trunkera om det är för många rader
+        # Logga bara en del av outputen om den är väldigt lång.
         if len(lines) > max_lines:
             for line in lines[:max_lines]:
                 logging.info(f"│ {line}")
