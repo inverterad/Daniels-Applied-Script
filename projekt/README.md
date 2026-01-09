@@ -176,7 +176,7 @@ Frans Schartaus Handelsinstitut
 
 ## Licens
 
-Detta projekt är skapat för utbildningsändamål inom kursen Applied Script.
+Detta projekt är skapat för utbildningsändamål i kursen Applied Script.
 
 
 
