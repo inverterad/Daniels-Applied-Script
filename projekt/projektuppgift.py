@@ -84,8 +84,24 @@ def setup_logging():
 def collect_system_info():
     logging.info("")
     logging.info("═══ SYSTEMINFORMATION ═══")
+    
+    # Hämta den riktiga användaren (även vid sudo)
+    real_user = os.getenv("SUDO_USER") or os.getenv("USER") or "okänd"
+    current_user = os.getenv("USER") or "okänd"
+    
+    # Om det är root men vi vet vem som körde sudo
+    if current_user == "root" and real_user != "root":
+        user_info = f"{real_user} (via sudo)"
+    else:
+        user_info = real_user
+    
+    # Logga användarinformation
+    logging.info("")
+    logging.info(f"Användare: {user_info}")
+    logging.info("")
+    
     return {
-        "user": os.getenv("SUDO_USER") or os.getenv("USER") or "okänd",
+        "user": user_info,
         "hostname": run_command(["hostname"]),
         "kernel": run_command(["uname", "-r"]),
         "uptime": run_command(["uptime"])
