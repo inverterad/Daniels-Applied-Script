@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-Security Scan Script (Applied Script)
+Security Scan Script
 
-Gör en enkel säkerhetskontroll i Linux:
-- kräver Linux + sudo
-- samlar systeminfo
-- (valfritt) samlar nätverksinfo
-- listar öppna portar
-- (valfritt) listar SUID-filer
-- loggar allt till logs/security_scan.log
+Utför en enkel säkerhetskontroll på Linux-system:
+- Samlar in systeminformation
+- Listar öppna portar
+- Kan även samla nätverksinfo och leta efter SUID-filer
+- Sparar allt i logs/security_scan.log
 """
 
 import os
@@ -20,167 +18,188 @@ import subprocess
 from pathlib import Path
 
 
-# ----- Inställningar -----
 SCRIPT_NAME = "Security Scan Script"
-VERSION = "1.2"
+VERSION = "1.5"
 LOG_DIR = Path("logs")
 LOG_FILE = LOG_DIR / "security_scan.log"
 
 
-# ----- Kör ett Linux-kommando och returnera output -----
+# Kör ett kommando och logga resultatet
 def run_command(command, max_lines=30):
     result = subprocess.run(command, capture_output=True, text=True)
-
-    # Logga vilket kommando som kördes
-    logging.info(f"Kör kommando: {' '.join(command)} | return code: {result.returncode}")
-
-    # Ta output (stdout om det finns, annars stderr)
+    
+    cmd_str = ' '.join(command)
+    logging.info("")
+    logging.info("┌─────────────────────────────────────────────────────────")
+    logging.info(f"│ KOMMANDO: {cmd_str}")
+    logging.info(f"│ Returkod: {result.returncode}")
+    logging.info("├─────────────────────────────────────────────────────────")
+    
     output = (result.stdout or result.stderr).strip()
-
-    # Logga bara en del av output så loggen inte blir jättestor
+    
     if output:
         lines = output.splitlines()
+        
+        # Trunkera om det är för många rader
         if len(lines) > max_lines:
-            logging.info("Output (utdrag):\n" + "\n".join(lines[:max_lines]) + "\n... (truncated)")
+            for line in lines[:max_lines]:
+                logging.info(f"│ {line}")
+            logging.info(f"│ ... ({len(lines) - max_lines} rader utelämnade)")
         else:
-            logging.info("Output:\n" + output)
-
+            for line in lines:
+                logging.info(f"│ {line}")
+    else:
+        logging.info("│ (ingen output)")
+    
+    logging.info("└─────────────────────────────────────────────────────────")
+    
     return output
 
 
-# ----- Kontroll: Linux -----
-def check_linux():
+# Kontrollera att vi kör på Linux med root-behörighet
+def check_requirements():
     if platform.system() != "Linux":
-        print("Fel: Scriptet måste köras på Linux.")
+        print("Fel: Scriptet fungerar endast på Linux.")
         sys.exit(1)
-
-
-# ----- Kontroll: sudo/root -----
-def check_root():
+    
     if os.geteuid() != 0:
-        print("Fel: Scriptet måste köras med sudo (root).")
+        print("Fel: Scriptet kräver sudo (root-behörighet).")
         sys.exit(1)
 
 
-# ----- Starta loggning -----
+# Skapa loggkatalog och starta loggning
 def setup_logging():
     LOG_DIR.mkdir(exist_ok=True)
     logging.basicConfig(
         filename=str(LOG_FILE),
         level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
+        format="%(asctime)s - %(message)s",
     )
-    logging.info("Script startat")
+    logging.info("╔═════════════════════════════════════════════════════════════════")
+    logging.info("║ SÄKERHETSSCAN STARTAD")
+    logging.info("╚═════════════════════════════════════════════════════════════════")
 
 
-# ----- Systeminfo -----
+# Samla in grundläggande systeminformation
 def collect_system_info():
-    user = os.getenv("SUDO_USER") or os.getenv("USER") or "unknown"
-    hostname = run_command(["hostname"])
-    kernel = run_command(["uname", "-r"])
-    uptime = run_command(["uptime"])
-    return {"user": user, "hostname": hostname, "kernel": kernel, "uptime": uptime}
+    logging.info("")
+    logging.info("═══ SYSTEMINFORMATION ═══")
+    return {
+        "user": os.getenv("SUDO_USER") or os.getenv("USER") or "okänd",
+        "hostname": run_command(["hostname"]),
+        "kernel": run_command(["uname", "-r"]),
+        "uptime": run_command(["uptime"])
+    }
 
 
-# ----- Nätverksinfo -----
+# Samla in nätverksinformation
 def collect_network_info():
-    ip_info = run_command(["ip", "a"])
-    routes = run_command(["ip", "r"])
-    return {"ip": ip_info, "routes": routes}
+    logging.info("")
+    logging.info("═══ NÄTVERKSINFORMATION ═══")
+    return {
+        "ip": run_command(["ip", "a"]),
+        "routes": run_command(["ip", "r"])
+    }
 
 
-# ----- Öppna portar -----
+# Lista öppna portar med ss-kommandot
 def scan_open_ports(quick):
-    if quick:
-        output = run_command(["ss", "-tuln"])
-    else:
-        output = run_command(["ss", "-tulpen"])
+    logging.info("")
+    logging.info("═══ ÖPPNA PORTAR ═══")
+    cmd = ["ss", "-tuln"] if quick else ["ss", "-tulpen"]
+    output = run_command(cmd)
     return [line for line in output.splitlines() if line.strip()]
 
 
-# ----- Valfri kontroll: SUID -----
+# Hitta filer med SUID-behörighet (kan vara säkerhetsrisk)
 def suid_check(limit=20):
+    logging.info("")
+    logging.info("═══ SUID-FILER ═══")
     cmd = ["bash", "-lc", f"find / -perm -4000 -type f 2>/dev/null | head -n {limit}"]
     output = run_command(cmd)
     return [line for line in output.splitlines() if line.strip()]
 
 
-# ----- Flaggar -----
+# Hantera kommandoradsargument
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Automatiserat säkerhetsscript för Linux-system")
-    parser.add_argument("-v", "--version", action="store_true", help="Visa version")
-    parser.add_argument("--quick", action="store_true", help="Snabbare portlista")
-    parser.add_argument("--no-network", action="store_true", help="Hoppa över nätverkskontroller")
-    parser.add_argument("--suid", action="store_true", help="Lista SUID-filer (valfritt)")
+    parser = argparse.ArgumentParser(
+        description="Säkerhetsscanning för Linux-system"
+    )
+    parser.add_argument("-v", "--version", action="store_true", 
+                       help="Visa version")
+    parser.add_argument("--quick", action="store_true", 
+                       help="Snabbare scan (mindre detaljer för portar)")
+    parser.add_argument("--no-network", action="store_true", 
+                       help="Hoppa över nätverksinformation")
+    parser.add_argument("--suid", action="store_true", 
+                       help="Sök efter SUID-filer")
     return parser.parse_args()
+
+
+# Skriv ut resultat till konsolen
+def print_results(system_info, network_info, ports, suid_results):
+    print("\n=== Scan klar ===\n")
+    
+    print("Systeminformation:")
+    print(f"  Användare:  {system_info['user']}")
+    print(f"  Hostname:   {system_info['hostname']}")
+    print(f"  Kernel:     {system_info['kernel']}")
+    print(f"  Uptime:     {system_info['uptime']}")
+    
+    if network_info:
+        print("\nNätverksinformation:")
+        print("  ✓ IP-adresser och routing insamlad")
+    
+    print("\nÖppna portar:")
+    if not ports:
+        print("  Inga lyssnande portar hittades")
+    else:
+        for line in ports[:15]:
+            print(f"  {line}")
+        if len(ports) > 15:
+            print(f"  ... och {len(ports) - 15} till")
+    
+    if suid_results is not None:
+        print("\nSUID-filer (säkerhetskänsliga):")
+        if not suid_results:
+            print("  Inga resultat")
+        else:
+            for line in suid_results:
+                print(f"  {line}")
+    
+    print(f"\n📋 Fullständig logg: {LOG_FILE}")
 
 
 def main():
     args = parse_arguments()
-
+    
     # Visa version och avsluta
     if args.version:
         print(f"{SCRIPT_NAME} – version {VERSION}")
         sys.exit(0)
-
-    # Förkontroller
-    check_linux()
-    check_root()
-
-    # Starta loggning
+    
+    # Kontrollera att allt är okej innan vi börjar
+    check_requirements()
     setup_logging()
-
+    
     try:
-        # 1) Systeminfo
+        # Samla information
         system_info = collect_system_info()
-
-        # 2) Nätverk (valfritt)
-        network_info = None
-        if not args.no_network:
-            network_info = collect_network_info()
-
-        # 3) Öppna portar
+        network_info = collect_network_info() if not args.no_network else None
         ports = scan_open_ports(args.quick)
-
-        # 4) SUID (valfritt)
-        suid_results = None
-        if args.suid:
-            suid_results = suid_check(limit=20)
-
-        # ----- Skriv ut resultat -----
-        print("\n=== Scan klar ===\n")
-
-        print("Systeminformation:")
-        print(f"- Användare: {system_info['user']}")
-        print(f"- Hostname: {system_info['hostname']}")
-        print(f"- Kernel: {system_info['kernel']}")
-        print(f"- Uptime: {system_info['uptime']}")
-
-        if network_info:
-            print("\nNätverk:")
-            print("- IP-information och routing insamlad")
-
-        print("\nÖppna portar:")
-        if len(ports) == 0:
-            print("- Inga lyssnande portar hittades.")
-        else:
-            for line in ports[:15]:
-                print(line)
-
-        if suid_results is not None:
-            print("\nSUID-filer (utdrag):")
-            if len(suid_results) == 0:
-                print("- Inga resultat (eller saknar behörighet).")
-            else:
-                for line in suid_results:
-                    print(line)
-
-        print(f"\nLoggfil sparad i: {LOG_FILE}")
-        logging.info("Script avslutades korrekt")
-
+        suid_results = suid_check(limit=20) if args.suid else None
+        
+        # Visa resultat
+        print_results(system_info, network_info, ports, suid_results)
+        
+        logging.info("")
+        logging.info("╔═════════════════════════════════════════════════════════════════")
+        logging.info("║ SÄKERHETSSCAN AVSLUTAD")
+        logging.info("╚═════════════════════════════════════════════════════════════════")
+        
     except Exception:
-        logging.exception("Ett fel inträffade")
-        print("Ett fel inträffade. Se loggfilen för detaljer.")
+        logging.exception("Ett fel inträffade under scannning")
+        print("❌ Ett fel inträffade. Se loggfilen för detaljer.")
         sys.exit(1)
 
 
