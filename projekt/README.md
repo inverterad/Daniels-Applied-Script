@@ -169,9 +169,8 @@ Scriptet hanterar fel på följande sätt:
 
 Nedan visas en körning av scriptet i terminal:
 
-<p align="center">
-  <img src="screenshot_script.png" width="800">
-</p>
+<img src="screenshot_script.png" width="700">
+
 
 
 
@@ -194,4 +193,4 @@ Detta projekt är skapat för utbildningsändamål i kursen Applied Script.
 
 ## Version
 
-**Version 1.** (2025-01-09)
+**Version 1.6** (2025-01-09)
