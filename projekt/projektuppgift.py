@@ -99,7 +99,7 @@ def collect_system_info():
     logging.info("")
     logging.info(f"Användare: {user_info}")
     logging.info("")
-    
+    # Hämta och returnera systeminfo
     return {
         "user": user_info,
         "hostname": run_command(["hostname"]),
@@ -108,7 +108,7 @@ def collect_system_info():
     }
 
 
-# Samla in nätverksinformation
+# Samla in nätverksinformation, inklusive IP-adresser och routing
 def collect_network_info():
     logging.info("")
     logging.info("═══ NÄTVERKSINFORMATION ═══")
@@ -128,15 +128,15 @@ def scan_open_ports(quick):
 
 
 # Hitta filer med SUID-behörighet (kan vara säkerhetsrisk)
-def suid_check(limit=20):
-    logging.info("")
+def suid_check():
+    logging.info("") 
     logging.info("═══ SUID-FILER ═══")
-    cmd = ["bash", "-lc", f"find / -perm -4000 -type f 2>/dev/null | head -n {limit}"]
+    cmd = ["bash", "-lc", "find / -perm -4000 -type f 2>/dev/null"]
     output = run_command(cmd)
     return [line for line in output.splitlines() if line.strip()]
 
 
-# Hantera kommandoradsargument
+# Hantera flaggor från kommandoraden
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Säkerhetsscanning för Linux-system"
@@ -156,25 +156,27 @@ def parse_arguments():
 def print_results(system_info, network_info, ports, suid_results):
     print("\n=== Scan klar ===\n")
     
+    # Visa systeminformation
     print("Systeminformation:")
     print(f"  Användare:  {system_info['user']}")
     print(f"  Hostname:   {system_info['hostname']}")
     print(f"  Kernel:     {system_info['kernel']}")
     print(f"  Uptime:     {system_info['uptime']}")
-    
+    # Visa nätverksinformation om insamlad
     if network_info:
         print("\nNätverksinformation:")
         print("  ✓ IP-adresser och routing insamlad")
-    
+    # Visa öppna portar
     print("\nÖppna portar:")
     if not ports:
         print("  Inga lyssnande portar hittades")
     else:
+        # Visa bara de första 15 porarna i konsolen
         for line in ports[:15]:
             print(f"  {line}")
         if len(ports) > 15:
             print(f"  ... och {len(ports) - 15} till")
-    
+    # Visa SUID-filer om vi sökte efter de
     if suid_results is not None:
         print("\nSUID-filer (säkerhetskänsliga):")
         if not suid_results:
@@ -182,8 +184,8 @@ def print_results(system_info, network_info, ports, suid_results):
         else:
             for line in suid_results:
                 print(f"  {line}")
-    
-    print(f"\n📋 Fullständig logg: {LOG_FILE}")
+    # Visa platsen för loggfilen
+    print(f"\nFullständig logg: {LOG_FILE}")
 
 
 def main():
@@ -203,19 +205,20 @@ def main():
         system_info = collect_system_info()
         network_info = collect_network_info() if not args.no_network else None
         ports = scan_open_ports(args.quick)
-        suid_results = suid_check(limit=20) if args.suid else None
+        suid_results = suid_check() if args.suid else None
         
         # Visa resultat
         print_results(system_info, network_info, ports, suid_results)
-        
+        #Visa att scanningen är klar i loggen
         logging.info("")
         logging.info("╔═════════════════════════════════════════════════════════════════")
         logging.info("║ SÄKERHETSSCAN AVSLUTAD")
         logging.info("╚═════════════════════════════════════════════════════════════════")
         
     except Exception:
+        # Om någpt går fel, logga det och avsluta
         logging.exception("Ett fel inträffade under scannning")
-        print("❌ Ett fel inträffade. Se loggfilen för detaljer.")
+        print("Ett fel inträffade. Se loggfilen för detaljer.")
         sys.exit(1)
 
 
