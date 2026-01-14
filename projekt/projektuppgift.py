@@ -122,7 +122,7 @@ def collect_network_info():
 def scan_open_ports(quick):
     logging.info("")
     logging.info("═══ ÖPPNA PORTAR ═══")
-    cmd = ["ss", "-tuln"] if quick else ["ss", "-tulpen"]
+    cmd = ["ss", "-tuan"] if quick else ["ss", "-tuapen"] # Jag bytte ut l mot a. Om man bara lyssnar på lyssnande portar missar man de portar som redan har en etablerad koppling.
     output = run_command(cmd)
     return [line for line in output.splitlines() if line.strip()]
 
